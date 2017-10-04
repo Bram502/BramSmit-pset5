@@ -18,11 +18,8 @@ import java.util.ArrayList;
 
 public class CustomAdapter extends ArrayAdapter<Task> {
 
-    MainActivity activity;
-
-    public CustomAdapter(MainActivity activity, @NonNull Context context, ArrayList<Task> taskList) {
+    public CustomAdapter(@NonNull Context context, ArrayList<Task> taskList) {
         super(context, R.layout.custom_row,taskList);
-        this.activity = activity;
     }
 
     @NonNull
@@ -32,15 +29,21 @@ public class CustomAdapter extends ArrayAdapter<Task> {
         View customView = inflater.inflate(R.layout.custom_row, parent, false);
 
         final Task task = getItem(position);
+        final DBHandler dbHandler = new DBHandler(getContext(),null,null,1);
 
-        final MainActivity mainActivity = (MainActivity) activity;
+
         CheckBox checkBox = (CheckBox) customView.findViewById(R.id.checkBox);
         TextView taskText = (TextView) customView.findViewById(R.id.taskText);
 
         checkBox.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mainActivity.itemChecked(task);
+                if (task.getFinished()) {
+                    task.setFinished(false);
+                } else {
+                    task.setFinished(true);
+                }
+                dbHandler.updateItem(task);
             }
         });
 

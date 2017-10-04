@@ -39,7 +39,7 @@ public class MainActivity extends AppCompatActivity
 
         // TODO Make DBhandler singleton
         dbHandler = new DBHandler(this,null,null,1);
-        dbHandler.clearDatabase();
+//        dbHandler.clearDatabase();
         getListArray();
 
 
@@ -51,12 +51,9 @@ public class MainActivity extends AppCompatActivity
 
         // TODO add OnClick events for the fab_menu
 
-        setNavigationMenu();
-
         // Set the first list as default for now TODO Save which list the user had open on previous run
         if (listArray.size() != 0) {
             currentList = 0;
-            loadListView();
         } else {
             TaskList exampleList = new TaskList("Example List");
             dbHandler.addItem(exampleList);
@@ -66,11 +63,12 @@ public class MainActivity extends AppCompatActivity
             exampleTask.setListId(listArray.get(currentList).getId());
             dbHandler.addItem(exampleTask);
             getListArray();
-            setNavigationMenu();
-            loadListView();
         }
 
+        setNavigationMenu();
+        loadListView();
     }
+
 
     // Initialize the navigation drawer with the lists from the listArray
     private void setNavigationMenu() {
@@ -84,19 +82,22 @@ public class MainActivity extends AppCompatActivity
         navigationView.setNavigationItemSelectedListener(this);
     }
 
+
     // Retrieve the listArray from the database
     private void getListArray() {
         listArray = dbHandler.databaseToArray();
     }
 
+
     // Load the listview with the currentList from listArray.
     private void loadListView() {
         if (listArray.get(currentList).getTaskList() != null) {
-            ArrayAdapter arrayAdapter = new CustomAdapter(this,getApplicationContext(), listArray.get(currentList).getTaskList());
+            ArrayAdapter arrayAdapter = new CustomAdapter(this,listArray.get(currentList).getTaskList());
             lvTasks = (ListView) findViewById(R.id.taskList);
             lvTasks.setAdapter(arrayAdapter);
         }
     }
+
 
     @Override
     public void onBackPressed() {
@@ -109,16 +110,6 @@ public class MainActivity extends AppCompatActivity
     }
 
     // TODO update item in database and reload everything.
-    public void itemChecked(Task task) {
-        if (task.getFinished()) {
-            task.setFinished(false);
-        } else {
-            task.setFinished(true);
-        }
-        dbHandler.updateItem(task);
-        getListArray();
-        loadListView();
-    }
 
 
     @SuppressWarnings("StatementWithEmptyBody")
