@@ -57,37 +57,36 @@ public class MainActivity extends AppCompatActivity
         drawer.setDrawerListener(toggle);
         toggle.syncState();
 
-        // TODO add OnClick events for the fab_menu
         FabSpeedDial fabSpeedDial = (FabSpeedDial) findViewById(R.id.speedDial);
         fabSpeedDial.setMenuListener(new SimpleMenuListenerAdapter() {
             @Override
             public boolean onMenuItemSelected(MenuItem menuItem) {
                 if (menuItem.getItemId() == R.id.action_addItem) {
                     goToInputActivity("task");
-                } else {
-                    if (menuItem.getItemId() == R.id.action_addList) {
-                        // TODO set focus on new list
-                        goToInputActivity("list");
+                } else if (menuItem.getItemId() == R.id.action_addList) {
+                    // TODO set focus on new List
+                    goToInputActivity("list");
+                } else if (menuItem.getItemId() == R.id.action_deleteList) {
+                    dbHandler.deleteList(listArray.get(currentListIndex));
+                    currentListIndex = 0;
+                    getListArray();
+                    if (listArray.size() == 0) {
+                        createExampleList();
                     }
+                    loadListView();
+                    setNavigationMenu();
                 }
+
+
                 return true;
             }
         });
 
-        // Set the first list as default for now TODO Save which list the user had open on previous run
         if (listArray.size() != 0) {
             currentListIndex = sharedPref.getInt("currentListIndex", 0);
 
         } else {
-            TaskList exampleList = new TaskList("Example List");
-            dbHandler.addItem(exampleList);
-            getListArray();
-            currentListIndex = 0;
-
-            Task exampleTask = new Task("Example Task");
-            exampleTask.setListId(listArray.get(currentListIndex).getId());
-            dbHandler.addItem(exampleTask);
-            getListArray();
+            createExampleList();
         }
 
 //        editor = sharedPref.edit();
@@ -99,6 +98,18 @@ public class MainActivity extends AppCompatActivity
         loadListView();
 
 
+    }
+
+    private void createExampleList() {
+        TaskList exampleList = new TaskList("Example List");
+        dbHandler.addItem(exampleList);
+        getListArray();
+        currentListIndex = 0;
+
+        Task exampleTask = new Task("Example Task");
+        exampleTask.setListId(listArray.get(currentListIndex).getId());
+        dbHandler.addItem(exampleTask);
+        getListArray();
     }
 
     private void goToInputActivity(String setting) {
@@ -170,7 +181,6 @@ public class MainActivity extends AppCompatActivity
     public boolean onNavigationItemSelected(MenuItem item) {
         // Handle navigation view item clicks here.
 
-        // TODO Change to dynamic for loop where the currentListIndex is set equal to the ItemId of the MenuItem.
         currentListIndex = item.getItemId();
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);

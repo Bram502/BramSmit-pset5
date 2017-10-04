@@ -23,7 +23,7 @@
     <include layout="@layout/content_main"
         android:id="@+id/include" />
 
-    
+
     <io.github.yavski.fabspeeddial.FabSpeedDial
         android:id="@+id/speedDial"
         android:layout_width="wrap_content"

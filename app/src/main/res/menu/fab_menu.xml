@@ -12,6 +12,10 @@
         android:icon="@drawable/ic_plus_white_24dp"
         />
 
+    <item android:title="Delete List"
+        android:id="@+id/action_deleteList"
+        android:icon="@drawable/ic_delete_white_24dp"
+        />
 
 
 
