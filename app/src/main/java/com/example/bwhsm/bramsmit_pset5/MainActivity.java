@@ -1,14 +1,11 @@
 package com.example.bwhsm.bramsmit_pset5;
 
 import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
-import android.support.annotation.DrawableRes;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.v4.content.ContextCompat;
-import android.view.View;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
@@ -17,16 +14,21 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
 import java.util.ArrayList;
 
+import io.github.yavski.fabspeeddial.FabSpeedDial;
+import io.github.yavski.fabspeeddial.SimpleMenuListenerAdapter;
+
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
 
     ArrayList<TaskList> listArray;
-    int currentList;
+    int currentListIndex;
     ListView lvTasks;
     DBHandler dbHandler;
 
@@ -37,9 +39,15 @@ public class MainActivity extends AppCompatActivity
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        // TODO Make DBhandler singleton
-        dbHandler = new DBHandler(this,null,null,1);
+        final SharedPreferences sharedPref = this.getPreferences(Context.MODE_PRIVATE);
+
+        dbHandler = DBHandler.getInstance(this);
+
 //        dbHandler.clearDatabase();
+//        SharedPreferences.Editor editor = sharedPref.edit();
+//        editor.putInt("currentListIndex", 0);
+//        editor.commit();
+
         getListArray();
 
 
@@ -50,23 +58,56 @@ public class MainActivity extends AppCompatActivity
         toggle.syncState();
 
         // TODO add OnClick events for the fab_menu
+        FabSpeedDial fabSpeedDial = (FabSpeedDial) findViewById(R.id.speedDial);
+        fabSpeedDial.setMenuListener(new SimpleMenuListenerAdapter() {
+            @Override
+            public boolean onMenuItemSelected(MenuItem menuItem) {
+                if (menuItem.getItemId() == R.id.action_addItem) {
+                    goToInputActivity("task");
+                } else {
+                    if (menuItem.getItemId() == R.id.action_addList) {
+                        // TODO set focus on new list
+                        goToInputActivity("list");
+                    }
+                }
+                return true;
+            }
+        });
 
         // Set the first list as default for now TODO Save which list the user had open on previous run
         if (listArray.size() != 0) {
-            currentList = 0;
+            currentListIndex = sharedPref.getInt("currentListIndex", 0);
+
         } else {
             TaskList exampleList = new TaskList("Example List");
             dbHandler.addItem(exampleList);
             getListArray();
-            currentList = 0;
+            currentListIndex = 0;
+
             Task exampleTask = new Task("Example Task");
-            exampleTask.setListId(listArray.get(currentList).getId());
+            exampleTask.setListId(listArray.get(currentListIndex).getId());
             dbHandler.addItem(exampleTask);
             getListArray();
         }
 
+//        editor = sharedPref.edit();
+//        SharedPreferences.Editor editor = sharedPref.edit();
+//        editor.putInt("currentListIndex", currentListIndex);
+//        editor.apply();
+
         setNavigationMenu();
         loadListView();
+
+
+    }
+
+    private void goToInputActivity(String setting) {
+        int listId = listArray.get(currentListIndex).getId();
+        Intent inputIntent = new Intent(this, InputActivity.class);
+        inputIntent.putExtra("listId", listId);
+        inputIntent.putExtra("setting", setting);
+        this.startActivity(inputIntent);
+        finish();
     }
 
 
@@ -89,13 +130,27 @@ public class MainActivity extends AppCompatActivity
     }
 
 
-    // Load the listview with the currentList from listArray.
+    // Load the listview with the currentListIndex from listArray.
     private void loadListView() {
-        if (listArray.get(currentList).getTaskList() != null) {
-            ArrayAdapter arrayAdapter = new CustomAdapter(this,listArray.get(currentList).getTaskList());
-            lvTasks = (ListView) findViewById(R.id.taskList);
-            lvTasks.setAdapter(arrayAdapter);
-        }
+
+        SharedPreferences sharedPref = this.getPreferences(Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPref.edit();
+        editor.putInt("currentListIndex", currentListIndex);
+        editor.apply();
+
+        ArrayAdapter arrayAdapter = new CustomAdapter(this,listArray.get(currentListIndex).getTaskList());
+        lvTasks = (ListView) findViewById(R.id.taskList);
+        lvTasks.setAdapter(arrayAdapter);
+        lvTasks.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+            @Override
+            public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
+                Task task = (Task) parent.getItemAtPosition(position);
+                dbHandler.deleteTask(task);
+                getListArray();
+                loadListView();
+                return true;
+            }
+        });
     }
 
 
@@ -109,28 +164,17 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    // TODO update item in database and reload everything.
-
 
     @SuppressWarnings("StatementWithEmptyBody")
     @Override
     public boolean onNavigationItemSelected(MenuItem item) {
         // Handle navigation view item clicks here.
 
-        // TODO Change to dynamic for loop where the currentList is set equal to the ItemId of the MenuItem.
-        switch (item.getItemId()) {
-            case 0:
-                currentList = 0;
-                break;
-            case 1:
-                break;
-            case 2:
-                break;
-        }
-
-
+        // TODO Change to dynamic for loop where the currentListIndex is set equal to the ItemId of the MenuItem.
+        currentListIndex = item.getItemId();
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
+        loadListView();
         return true;
     }
 }

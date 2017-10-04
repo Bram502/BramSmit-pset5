@@ -11,6 +11,8 @@ import java.util.ArrayList;
 
 public class DBHandler extends SQLiteOpenHelper {
 
+    private static DBHandler sInstance;
+
     private static final int DATABASE_VERSION = 1;
     private static final String DATABASE_NAME = "tasks.db";
     public static final String TABLE_TASKS = "tasks";
@@ -20,7 +22,15 @@ public class DBHandler extends SQLiteOpenHelper {
     public static final String COLUMN_LIST_ID = "list_id";
     public static final String COLUMN_COMPLETED = "completed";
 
-    public DBHandler(Context context, String name, SQLiteDatabase.CursorFactory factory, int version) {
+
+    public static synchronized DBHandler getInstance(Context context) {
+        if (sInstance == null) {
+            sInstance = new DBHandler(context.getApplicationContext(),null,null,1);
+        }
+        return sInstance;
+    }
+
+    private DBHandler(Context context, String name, SQLiteDatabase.CursorFactory factory, int version) {
         super(context, DATABASE_NAME, factory, DATABASE_VERSION);
     }
 
@@ -74,12 +84,9 @@ public class DBHandler extends SQLiteOpenHelper {
     }
 
     // Delete item from database
-    public void deleteItems(ArrayList<Task> toBeDeleted) {
+    public void deleteTask(Task task) {
         SQLiteDatabase db = getWritableDatabase();
-        for (int i=0;i<toBeDeleted.size();i++) {
-            Task currentTask = toBeDeleted.get(i);
-            db.delete(TABLE_TASKS, " " + COLUMN_ID + " = ? ", new String[] {String.valueOf(currentTask.getId())});
-        }
+        db.delete(TABLE_TASKS, " " + COLUMN_ID + " = ? ", new String[] {String.valueOf(task.getId())});
         db.close();
     }
 

@@ -29,7 +29,9 @@ public class CustomAdapter extends ArrayAdapter<Task> {
         View customView = inflater.inflate(R.layout.custom_row, parent, false);
 
         final Task task = getItem(position);
-        final DBHandler dbHandler = new DBHandler(getContext(),null,null,1);
+//        final DBHandler dbHandler = new DBHandler(getContext(),null,null,1);
+
+        final DBHandler dbHandler = DBHandler.getInstance(getContext());
 
 
         CheckBox checkBox = (CheckBox) customView.findViewById(R.id.checkBox);
